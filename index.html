@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Absensi QR - Unique Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Library QR Scanner -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Library Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Library SheetJS untuk Export Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Library pembuat QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body data-theme="light">
+
+    <!-- HIASAN CAHAYA AURORA & SPARKLES BERGERAK DI BACKGROUND -->
+    <div class="bg-orb orb-pink"></div>
+    <div class="bg-orb orb-blue"></div>
+    <div class="sparkle-particles">
+        <span>✨</span><span>🌸</span><span>✦</span><span>💫</span><span>✦</span>
+    </div>
+
+    <!-- NOTIFIKASI MELAYANG (SUCCESS TOAST) -->
+    <div id="toast-notification" class="toast-box">✨ Absensi Berhasil Tercatat!</div>
+
+    <!-- HALAMAN 1: LOGIN MULTI-PERAN -->
+    <div id="login-page" class="container card-glass animate-entrance">
+        <div class="brand-header">
+            <span class="icon-sparkle">🌸✨</span>
+            <h2>Smart Absensi QR</h2>
+            <p>SMKN 1 GS • Portal Kehadiran Digital</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="role-select">Pilih Akses Masuk:</label>
+            <select id="role-select" onchange="playClickSound()">
+                <option value="siswa">🎓 Siswa / Peserta Didik</option>
+                <option value="guru">👩‍🏫 Guru / Pengajar</option>
+                <option value="admin">💻 Admin Sekolah</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="password-input">Kata Sandi (Khusus Guru/Admin):</label>
+            <input type="password" id="password-input" placeholder="Masukkan sandi akses...">
+        </div>
+
+        <button class="btn btn-primary" onclick="playClickSound(); handleLogin();">Masuk ke Dashboard</button>
+        <button class="btn btn-secondary" onclick="playClickSound(); toggleTheme();" style="margin-top: 10px;">🌙 Ganti Tema Tampilan</button>
+    </div>
+
+    <!-- HALAMAN 2: SCANNER SISWA -->
+    <div id="student-page" class="container card-glass wide-card animate-entrance" style="display: none;">
+        <div class="header-nav">
+            <h3>📷 Pemindai & Validasi Siswa</h3>
+            <span class="badge-status">GPS Aktif</span>
+        </div>
+        <p class="sub-text">Pilih kamera, pastikan kamu berada di area sekolah, lalu scan QR!</p>
+        
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label for="camera-select">Pilih Kamera Perangkat:</label>
+            <select id="camera-select" onchange="playClickSound(); switchCameraMode();">
+                <option value="environment">📷 Kamera Belakang (Scan QR Kartu)</option>
+                <option value="user">📸 Kamera Depan (Selfie Check-in)</option>
+            </select>
+        </div>
+
+        <div id="gps-status" class="gps-box">📡 Mengecek lokasi GPS sekolah...</div>
+
+        <!-- KOTAK SCANNER DENGAN LASER NEON MENYALA -->
+        <div class="scanner-box">
+            <div id="reader"></div>
+            <div class="laser-glow-line"></div>
+            <div class="scanner-corner tl"></div>
+            <div class="scanner-corner tr"></div>
+            <div class="scanner-corner bl"></div>
+            <div class="scanner-corner br"></div>
+        </div>
+        
+        <div id="result" class="result-box">Menunggu pemindaian QR...</div>
+        
+        <div class="card-preview-container">
+            <h4>🪪 Kartu Pelajar Digital</h4>
+            <p class="sub-text" style="margin-bottom: 8px; text-align: center;">Sudah terdaftar? Cukup isi NISN. Siswa baru: isi juga nama & kelas. Data tidak akan dobel.</p>
+            <div class="form-group" style="margin-bottom: 8px;">
+                <input id="nisn-input" inputmode="numeric" maxlength="10" placeholder="NISN (10 digit)">
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+                <input id="nama-input" placeholder="Nama lengkap (khusus siswa baru)">
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+                <input id="kelas-input" list="daftar-kelas" placeholder="Kelas, contoh: X TJKT 1 (khusus siswa baru)">
+                <datalist id="daftar-kelas"></datalist>
+            </div>
+            <button class="btn btn-secondary" style="margin: 0 0 10px;" onclick="playClickSound(); buatKartuSaya();">✨ Buat / Tampilkan Kartu QR</button>
+            <div id="student-card-printable" class="student-card">
+                <div class="card-header"><span>SMKN 1 GUNUNG SINDUR</span></div>
+                <div class="card-body">
+                    <div id="my-qr" class="my-qr"></div>
+                    <div class="card-info">
+                        <h4 id="card-nama">Nama Siswa</h4>
+                        <p id="card-nisn">NISN: -</p>
+                        <p id="card-kelas">Kelas: -</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 10px;" onclick="playClickSound(); window.print();">🖨️ Cetak Kartu Pelajar</button>
+        </div>
+
+        <button class="btn btn-secondary" onclick="playClickSound(); goBackToLogin();">⬅️ Kembali ke Login</button>
+    </div>
+
+    <!-- HALAMAN 3: REKAP GURU -->
+    <div id="teacher-page" class="container card-glass wide-card animate-entrance" style="display: none;">
+        <div class="header-nav">
+            <h3>📑 Data Kehadiran Siswa</h3>
+            <button class="btn-sm" onclick="playClickSound(); goBackToLogin();">Keluar</button>
+        </div>
+        <p class="sub-text">Pantau kehadiran berdasarkan kelas dan periode waktu</p>
+        
+        <div class="filter-flex">
+            <div class="form-group">
+                <label for="filter-periode">Periode Rekap:</label>
+                <select id="filter-periode" onchange="playClickSound(); gantiPeriodeRekap();">
+                    <option value="harian">📅 Harian (Hari Ini)</option>
+                    <option value="mingguan">📊 Mingguan</option>
+                    <option value="bulanan">📈 Bulanan</option>
+                    <option value="tahunan">🏆 Tahunan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-kelas">Kelas:</label>
+                <select id="filter-kelas" onchange="playClickSound(); filterDataKelas();">
+                    <option value="semua">📂 Semua Kelas</option>
+                    <option value="X">Kelas X</option>
+                    <option value="XI">Kelas XI</option>
+                    <option value="XII">Kelas XII</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-excel" onclick="playClickSound(); exportToExcel();">📥 Unduh Rekap ke Excel (.xlsx)</button>
+        <button class="btn btn-primary" style="margin-bottom: 12px; font-size: 12px;" onclick="playClickSound(); bukaQrPage();">🪪 Buat & Cetak QR Siswa</button>
+
+        <div class="table-responsive">
+            <table class="data-table" id="tabel-absensi">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th>Status</th>
+                        <th>Ubah Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-kelas="X">
+                        <td>01</td>
+                        <td><strong>Alya Putri</strong></td>
+                        <td>X TJKT 1</td>
+                        <td><span class="badge badge-success">Hadir</span></td>
+                        <td>
+                            <select class="select-sm" onchange="playClickSound(); ubahStatus(this, 'Alya Putri');">
+                                <option value="Hadir" selected>Hadir</option>
+                                <option value="Terlambat">Terlambat</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alfa">Alfa</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-kelas="XI">
+                        <td>02</td>
+                        <td><strong>Budi Santoso</strong></td>
+                        <td>XI BP 1</td>
+                        <td><span class="badge badge-warning">Terlambat</span></td>
+                        <td>
+                            <select class="select-sm" onchange="playClickSound(); ubahStatus(this, 'Budi Santoso');">
+                                <option value="Hadir">Hadir</option>
+                                <option value="Terlambat" selected>Terlambat</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alfa">Alfa</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-kelas="XII">
+                        <td>03</td>
+                        <td><strong>Citra Dewi</strong></td>
+                        <td>XII TO 2</td>
+                        <td><span class="badge badge-info">Izin</span></td>
+                        <td>
+                            <select class="select-sm" onchange="playClickSound(); ubahStatus(this, 'Citra Dewi');">
+                                <option value="Hadir">Hadir</option>
+                                <option value="Terlambat">Terlambat</option>
+                                <option value="Izin" selected>Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alfa">Alfa</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- HALAMAN 4: DASHBOARD ADMIN ANALYTICS + LEADERBOARD -->
+    <div id="admin-page" class="container card-glass super-wide animate-entrance" style="display: none;">
+        <div class="header-nav">
+            <div>
+                <h3>📊 Executive Analytics Admin</h3>
+                <p id="label-periode-admin" class="sub-text">Rekapitulasi: Harian (Real-time)</p>
+            </div>
+            <button class="btn-sm" onclick="playClickSound(); goBackToLogin();">Keluar</button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label for="admin-periode-select">Pilih Mode Laporan Rekap:</label>
+            <select id="admin-periode-select" onchange="playClickSound(); updateAdminRekap();">
+                <option value="harian">📅 Rekap Harian</option>
+                <option value="mingguan">📊 Rekap Mingguan</option>
+                <option value="bulanan">📈 Rekap Bulanan</option>
+                <option value="tahunan">🏆 Rekap Tahunan</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" style="margin-bottom: 6px; font-size: 12px;" onclick="playClickSound(); bukaQrPage();">🪪 Buat & Cetak QR Siswa</button>
+
+        <div class="stats-grid-8">
+            <div class="mini-card"><span class="m-title">👥 Total</span><span id="stat-total" class="m-val">47</span></div>
+            <div class="mini-card green"><span class="m-title">✅ Hadir</span><span id="stat-hadir" class="m-val">38</span></div>
+            <div class="mini-card yellow"><span class="m-title">⏰ Telat</span><span id="stat-telat" class="m-val">3</span></div>
+            <div class="mini-card blue"><span class="m-title">🏠 Pulang</span><span id="stat-pulang" class="m-val">1</span></div>
+            <div class="mini-card purple"><span class="m-title">📩 Izin</span><span id="stat-izin" class="m-val">2</span></div>
+            <div class="mini-card orange"><span class="m-title">🏥 Sakit</span><span id="stat-sakit" class="m-val">1</span></div>
+            <div class="mini-card red"><span class="m-title">❌ Alfa</span><span id="stat-alfa" class="m-val">2</span></div>
+            <div class="mini-card pink"><span class="m-title">📈 % Hadir</span><span id="stat-persen" class="m-val">87.2%</span></div>
+        </div>
+
+        <div class="charts-wrapper">
+            <div class="chart-box">
+                <h4>🍩 Presentase Kehadiran</h4>
+                <div class="chart-container-donut">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <h4>📊 Sebaran Data Absensi</h4>
+                <div class="chart-container-bar">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="leaderboard-container">
+            <h4>🏆 Top 3 Siswa Terdisiplin Bulan Ini</h4>
+            <div class="leaderboard-list">
+                <div class="lb-item">
+                    <span class="lb-rank">🥇 1</span>
+                    <span class="lb-name">Alya Putri (X TJKT 1)</span>
+                    <span class="lb-score">100% Tepat Waktu</span>
+                </div>
+                <div class="lb-item">
+                    <span class="lb-rank">🥈 2</span>
+                    <span class="lb-name">Budi Santoso (XI BP 1)</span>
+                    <span class="lb-score">98.5% Tepat Waktu</span>
+                </div>
+                <div class="lb-item">
+                    <span class="lb-rank">🥉 3</span>
+                    <span class="lb-name">Citra Dewi (XII TO 2)</span>
+                    <span class="lb-score">97.0% Tepat Waktu</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HALAMAN 5: GENERATOR & CETAK QR SISWA (Guru/Admin) -->
+    <div id="qr-page" class="container card-glass super-wide animate-entrance" style="display: none;">
+        <div class="header-nav">
+            <h3>🪪 Generator QR Siswa</h3>
+            <button class="btn-sm" onclick="playClickSound(); tutupQrPage();">⬅️ Kembali</button>
+        </div>
+        <p class="sub-text">Isi QR = NISN siswa. Data diambil otomatis dari spreadsheet.</p>
+
+        <div class="filter-flex" style="margin-top: 12px;">
+            <div class="form-group">
+                <label for="qr-kelas">Kelas:</label>
+                <select id="qr-kelas" onchange="playClickSound(); renderQr();"></select>
+            </div>
+            <div class="form-group">
+                <label for="qr-cari">Cari nama / NISN:</label>
+                <input id="qr-cari" placeholder="ketik untuk mencari..." oninput="renderQr()">
+            </div>
+        </div>
+        <div id="qr-info" class="sub-text" style="margin-bottom: 8px;"></div>
+        <button class="btn btn-primary" onclick="playClickSound(); cetakQr();">🖨️ Cetak QR (A4)</button>
+
+        <div id="qr-print-area">
+            <div id="qr-grid" class="qr-grid"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

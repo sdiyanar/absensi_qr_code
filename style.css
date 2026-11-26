@@ -1,0 +1,287 @@
+/* =====================================================
+   SMART ABSENSI QR - TEMA PINK & PUTIH
+   (struktur sama dengan versi lama + style tambahan sudah digabung)
+   ===================================================== */
+
+/* PENGATURAN TEMA WARNA (LIGHT = PINK PUTIH, DARK = PINK GELAP) */
+body[data-theme="light"] {
+    --bg-gradient: radial-gradient(circle at top left, #ffffff 0%, #fff0f6 30%, #ffdbe9 65%, #ffc2da 100%);
+    --card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 240, 246, 0.75));
+    --text-color: #4a1d33;
+    --subtext-color: #9d5b7a;
+    --border-color: rgba(236, 72, 153, 0.22);
+    --card-glow: 0 20px 45px rgba(236, 72, 153, 0.20), 0 10px 25px rgba(255, 143, 184, 0.18);
+    --orb-pink-color: #ff8fb8;
+    --orb-blue-color: #ffd1e3;
+    --glass: rgba(255, 255, 255, 0.75);
+    --glass-strong: rgba(255, 255, 255, 0.9);
+    --input-bg: rgba(255, 255, 255, 0.85);
+    --option-bg: #ffffff;
+    --option-text: #4a1d33;
+    --th-bg: rgba(255, 228, 240, 0.95);
+}
+
+body[data-theme="dark"] {
+    --bg-gradient: radial-gradient(circle at top left, #4a0d2a 0%, #2a0a1e 50%, #1a0612 100%);
+    --card-bg: linear-gradient(145deg, rgba(60, 16, 40, 0.85), rgba(35, 10, 26, 0.9));
+    --text-color: #fff1f7;
+    --subtext-color: #f5b7d1;
+    --border-color: rgba(244, 114, 182, 0.35);
+    --card-glow: 0 20px 50px rgba(219, 39, 119, 0.30), 0 10px 30px rgba(244, 114, 182, 0.15);
+    --orb-pink-color: #be185d;
+    --orb-blue-color: #9d174d;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-strong: rgba(255, 255, 255, 0.12);
+    --input-bg: rgba(255, 255, 255, 0.10);
+    --option-bg: #3c1028;
+    --option-text: #fff1f7;
+    --th-bg: rgba(60, 16, 40, 0.95);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s; }
+
+body {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    color: var(--text-color);
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* CAHAYA AURORA BULAT BERGERAK */
+.bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -2;
+    opacity: 0.65;
+    animation: floatOrb 8s infinite alternate ease-in-out;
+}
+.orb-pink {
+    width: 320px; height: 320px;
+    background: var(--orb-pink-color);
+    top: -60px; left: -60px;
+}
+.orb-blue {
+    width: 350px; height: 350px;
+    background: var(--orb-blue-color);
+    bottom: -80px; right: -60px;
+    animation-delay: 2s;
+}
+@keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(35px, 30px) scale(1.15); }
+}
+
+/* PARTIKEL SPARKLES MELAYANG */
+.sparkle-particles span {
+    position: fixed;
+    font-size: 18px;
+    z-index: -1;
+    opacity: 0.7;
+    animation: twinkleFloat 5s infinite ease-in-out;
+    pointer-events: none;
+}
+.sparkle-particles span:nth-child(1) { top: 12%; left: 15%; animation-delay: 0s; }
+.sparkle-particles span:nth-child(2) { top: 20%; right: 18%; animation-delay: 1.2s; }
+.sparkle-particles span:nth-child(3) { bottom: 18%; left: 20%; animation-delay: 2.4s; }
+.sparkle-particles span:nth-child(4) { bottom: 25%; right: 15%; animation-delay: 0.8s; }
+.sparkle-particles span:nth-child(5) { top: 50%; left: 8%; animation-delay: 1.8s; }
+
+@keyframes twinkleFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(0.9); opacity: 0.4; }
+    50% { transform: translateY(-12px) rotate(15deg) scale(1.25); opacity: 1; }
+}
+
+/* ANIMASI MASUK HALAMAN */
+@keyframes uniqueZoomIn {
+    0% { opacity: 0; transform: scale(0.92) translateY(20px); filter: blur(4px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+.animate-entrance {
+    animation: uniqueZoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* NOTIFIKASI TOAST */
+.toast-box {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+    background: linear-gradient(135deg, #ec4899, #f472b6); color: white;
+    padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4); z-index: 1000;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast-box.show { transform: translateX(-50%) translateY(0); }
+
+.card-glass {
+    background: var(--card-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--card-glow);
+}
+
+.wide-card { max-width: 540px; }
+.super-wide { max-width: 620px; max-height: 90vh; overflow-y: auto; }
+
+.brand-header { text-align: center; margin-bottom: 20px; position: relative; }
+.brand-header h2 { font-size: 22px; color: #db2777; font-weight: 700; }
+body[data-theme="dark"] .brand-header h2 { color: #f9a8d4; }
+.brand-header p, .sub-text { font-size: 12px; color: var(--subtext-color); margin-top: 4px; }
+
+/* IKON SPARKLE BERKILAU */
+.icon-sparkle {
+    display: inline-block;
+    font-size: 26px;
+    animation: sparkleFloat 2s infinite ease-in-out;
+}
+@keyframes sparkleFloat {
+    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px #ec4899); }
+    50% { transform: translateY(-5px) scale(1.15); filter: drop-shadow(0 0 14px #f9a8d4); }
+}
+
+.header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.header-nav h3 { font-size: 18px; color: var(--text-color); }
+.badge-status { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #fce7f3; color: #be185d; border: 1px solid #f9a8d4; }
+
+.form-group { margin-bottom: 14px; text-align: left; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-color); margin-bottom: 5px; }
+.filter-flex { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+select, input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 12px;
+    outline: none;
+}
+select:focus, input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18); }
+select option, select optgroup { background: var(--option-bg); color: var(--option-text); }
+
+.btn { width: 100%; padding: 12px; border: none; border-radius: 14px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: linear-gradient(135deg, #ec4899, #f472b6); color: white; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.35); }
+.btn-secondary { background: var(--glass); color: var(--text-color); margin-top: 15px; border: 1px solid var(--border-color); }
+.btn-excel { background: linear-gradient(135deg, #f472b6, #db2777); color: white; margin-bottom: 12px; font-size: 12px; box-shadow: 0 6px 16px rgba(219, 39, 119, 0.3); }
+.btn-sm { padding: 6px 12px; border-radius: 10px; border: none; background: #db2777; color: white; font-size: 11px; cursor: pointer; }
+
+/* GPS & SCANNER */
+.gps-box {
+    font-size: 11px; padding: 6px 10px;
+    background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981;
+    color: #059669; border-radius: 8px; text-align: center; margin-bottom: 10px; font-weight: 600;
+}
+.scanner-box {
+    position: relative; margin-top: 10px; border-radius: 16px; overflow: hidden;
+    border: 2px solid rgba(236, 72, 153, 0.6);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.35);
+    background: #fff;
+}
+.laser-glow-line {
+    position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, transparent, #ec4899, #f9a8d4, transparent);
+    box-shadow: 0 0 15px #ec4899, 0 0 30px #f472b6;
+    animation: neonLaserMove 2s infinite ease-in-out; z-index: 10;
+}
+@keyframes neonLaserMove {
+    0% { top: 0%; opacity: 0.8; }
+    50% { top: 95%; opacity: 1; }
+    100% { top: 0%; opacity: 0.8; }
+}
+
+/* SUDUT KOTAK SCANNER */
+.scanner-corner { position: absolute; width: 15px; height: 15px; border-color: #ec4899; border-style: solid; z-index: 5; }
+.scanner-corner.tl { top: 8px; left: 8px; border-width: 3px 0 0 3px; }
+.scanner-corner.tr { top: 8px; right: 8px; border-width: 3px 3px 0 0; }
+.scanner-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 3px 3px; }
+.scanner-corner.br { bottom: 8px; right: 8px; border-width: 0 3px 3px 0; }
+
+.result-box { margin-top: 12px; padding: 10px; background: var(--glass); border-radius: 12px; font-size: 12px; text-align: center; color: var(--text-color); border: 1px solid var(--border-color); }
+
+/* KARTU DIGITAL */
+.card-preview-container { margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 12px; }
+.card-preview-container h4 { font-size: 12px; color: var(--text-color); margin-bottom: 6px; text-align: center; }
+.student-card { background: linear-gradient(135deg, #ffffff 0%, #ffc8dd 100%); border-radius: 14px; padding: 10px; color: #4a1d33; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.18); border: 1px solid #f9a8d4; }
+.card-header { font-weight: 700; font-size: 10px; text-align: center; color: #be185d; border-bottom: 1px solid rgba(236, 72, 153, 0.35); padding-bottom: 3px; margin-bottom: 6px; }
+.card-body { display: flex; align-items: center; gap: 10px; }
+.card-body img { width: 65px; height: 65px; border-radius: 6px; background: white; padding: 3px; }
+.card-info h4 { font-size: 12px; font-weight: 700; color: #4a1d33; text-align: left; }
+.card-info p { font-size: 10px; color: #7a3b5a; }
+
+/* STATS & TABEL */
+.stats-grid-8 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+.mini-card { background: var(--glass); padding: 8px 4px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); }
+.m-title { display: block; font-size: 9px; color: var(--subtext-color); font-weight: 500; }
+.m-val { font-size: 13px; font-weight: 700; color: var(--text-color); }
+.mini-card.pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+.mini-card.pink .m-val, .mini-card.pink .m-title { color: #9d174d; }
+
+.table-responsive { overflow-x: auto; margin-top: 10px; max-height: 320px; overflow-y: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th, .data-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-color); }
+.data-table th { position: sticky; top: 0; background: var(--th-bg); color: #be185d; font-weight: 700; }
+body[data-theme="dark"] .data-table th { color: #f9a8d4; }
+.data-table tbody tr:hover { background: rgba(236, 72, 153, 0.07); }
+.select-sm { padding: 5px 8px; font-size: 11px; border-radius: 8px; }
+
+.badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; color: white; font-weight: 600; white-space: nowrap; }
+.badge-success { background: #059669; }
+.badge-warning { background: #d97706; }
+.badge-info { background: #ec4899; }
+.badge-danger { background: #dc2626; }
+.badge-purple { background: #a855f7; }
+.badge-gray { background: #94a3b8; }
+.ket-text { display: block; font-size: 10px; color: var(--subtext-color); margin-top: 3px; font-weight: 400; }
+
+/* CHARTS & LEADERBOARD */
+.charts-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+@media (max-width: 480px) { .charts-wrapper { grid-template-columns: 1fr; } }
+.chart-box { background: var(--glass); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); }
+.chart-box h4 { font-size: 11px; color: var(--text-color); margin-bottom: 6px; text-align: center; }
+.chart-container-donut, .chart-container-bar { position: relative; height: 120px; width: 100%; }
+
+.leaderboard-container { margin-top: 15px; background: var(--glass); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); }
+.leaderboard-container h4 { font-size: 11px; color: #be185d; margin-bottom: 8px; text-align: center; font-weight: 700; }
+body[data-theme="dark"] .leaderboard-container h4 { color: #f9a8d4; }
+.leaderboard-list { display: flex; flex-direction: column; gap: 6px; }
+.lb-item { display: flex; justify-content: space-between; align-items: center; background: var(--glass-strong); padding: 6px 10px; border-radius: 10px; font-size: 11px; border-left: 3px solid #ec4899; }
+.lb-name { font-weight: 600; color: var(--text-color); flex-grow: 1; margin-left: 8px; }
+.lb-score { color: #db2777; font-weight: 700; }
+
+/* GENERATOR QR */
+.my-qr { width: 86px; height: 86px; flex-shrink: 0; background: #fff; border-radius: 8px; padding: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #9d5b7a; text-align: center; }
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 14px; }
+.qr-card { background: linear-gradient(135deg, #ffffff 0%, #ffe0ec 100%); border: 1.5px solid #f472b6; border-radius: 14px; padding: 10px; text-align: center; color: #4a1d33; break-inside: avoid; page-break-inside: avoid; }
+.qr-head { font-size: 9px; font-weight: 700; color: #be185d; border-bottom: 1px solid rgba(236, 72, 153, .35); padding-bottom: 4px; margin-bottom: 6px; }
+.qr-img { display: flex; justify-content: center; background: #fff; padding: 6px; border-radius: 8px; width: fit-content; margin: 0 auto 6px; }
+.qr-nama { font-size: 12px; font-weight: 700; line-height: 1.25; }
+.qr-info { font-size: 10px; color: #7a3b5a; margin-top: 2px; }
+
+/* CETAK QR SISWA (A4) */
+@media print {
+    body.print-qr * { visibility: hidden; }
+    body.print-qr #qr-print-area, body.print-qr #qr-print-area * { visibility: visible; }
+    body.print-qr #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    body.print-qr #qr-page { max-height: none; overflow: visible; }
+    body.print-qr .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 0; }
+    body.print-qr .qr-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: A4; margin: 10mm; }
+}
+
+/* CETAK KARTU PELAJAR */
+@media print {
+    body * { visibility: hidden; }
+    #student-card-printable, #student-card-printable * { visibility: visible; }
+    #student-card-printable { position: absolute; left: 0; top: 0; width: 340px; }
+}
